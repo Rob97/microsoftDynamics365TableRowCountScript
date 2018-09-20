@@ -1,0 +1,2 @@
+# microsoftDynamics365TableRowCountScript
+This repository contains a word document and a javascript file which is integrated with FetchXML. The word document contains steps on how to find the row counts of a client's tables that are on Microsoft Dynamics 365. This script was made as there was no simple way to find the row counts of each table of a clients in one step. Currently in the script only certain tables are called upon to find their row counts. That can be adjusted based on your needs. 

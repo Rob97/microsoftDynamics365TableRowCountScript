@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Execute fetchXML with WebAPI in Dynamics 365 using JavaScript to get Row Counts</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/milligram/1.3.0/milligram.min.css" integrity="sha256-Ro/wP8uUi8LR71kwIdilf78atpu8bTEwrK5ZotZo+Zc="
+        crossorigin="anonymous" />
+    <style>
+        button {
+            width: 100%
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Execute fetchXML with WebAPI in Dynamics 365 using JavaScript to get Row Counts</h1>
+    <h2>Press the following buttons in order. The file will automatically start downloading after completing step 3</h2>
+    <button onclick="GetEntities()" id="GetEntities">Step 1: Get Entities names</button>
+    <button onclick="GetFetch()" id="GetFetch">Step 2: Fetch Row Counts of Tables</button>
+    <button onclick="downloadCSV()" id="downloadCSV">Step 3: Download File</button>
+
+
+
+    <script>  
+
+
+
+        var locationHost = location.host;
+        var clientURL = location.protocol + '//' + locationHost;
+        var enterpriseID = locationHost.substring(0, locationHost.indexOf('.'));
+        var EntitySetName = []
+        var SchemaName = []
+        var PrimaryIdAttribute = []
+        var CollectionSchemaName = []
+        var NullCollectionSchemaName = []
+        var rowCountArray = [["EnterpriseID", "Table Plural Name", "RowCount"]]
+        var globalEntityName = "";
+
+
+        function GetEntities() {
+            fetch(
+                clientURL +
+                "/api/data/v9.0/" + "EntityDefinitions?$select=EntitySetName,%20SchemaName,%20PrimaryIdAttribute,%20CollectionSchemaName",
+                {
+                    credentials: "same-origin",
+                    headers: {
+                        Prefer: 'odata.include-annotations="*"'
+                    }
+                }
+            ).then(response => response.json())
+                .then(result => parseEntities(result))
+
+                .catch(error => console.error("Error:", error));
+        }
+
+        function parseEntities(result) {
+
+            for (i = 0; i < JSON.stringify(result["value"].length); i++) {
+                if (result["value"][i].CollectionSchemaName != null && !isUnwantedSchema(result["value"][i].SchemaName)) {
+
+                    EntitySetName.push(result["value"][i].EntitySetName);
+                    // console.dir( "value from source: " + JSON.stringify(result["value"][i].EntitySetName)); 
+                    // console.dir("EntitySetName value: "  + EntitySetName[i]); 
+
+                    SchemaName.push(result["value"][i].SchemaName);
+                    // console.dir("value from source: " + JSON.stringify(result["value"][i].SchemaName));
+                    // console.dir("SchemaName value: "  + SchemaName[i]);  
+
+                    PrimaryIdAttribute.push(result["value"][i].PrimaryIdAttribute);
+                    // console.dir( "value from source: " + JSON.stringify(result["value"][i].PrimaryIdAttribute));
+                    // console.dir("PrimaryIdAttribute value: "  + PrimaryIdAttribute[i]);  
+
+                    CollectionSchemaName.push(result["value"][i].CollectionSchemaName);
+                }
+                else {
+                    NullCollectionSchemaName.push(result["value"][i].SchemaName);
+                }
+            }
+
+            alert("Get Entites Completed")
+
+            // console.dir("EntitySetName value: " + EntitySetName);
+            // console.dir("SchemaName value: " + SchemaName);
+            // console.dir("PrimaryIdAttribute value: " + PrimaryIdAttribute);
+            // console.dir("CollectionSchemaName value: " + CollectionSchemaName);
+            // console.dir("NullCollectionSchemaName value: " + NullCollectionSchemaName);
+
+        }
+
+        //Returns true if schemaName is unwanted
+        function isUnwantedSchema(schemaName) {
+
+            var unwantedSchemas = ["ACIViewMapper", "ActionCard", "ActionCardUserSettings", "ActionCardUserState", "ActivityParty", "AdvancedSimilarityRule", "AnnualFiscalCalendar", "AppConfig", "AppConfigInstance", "AppConfigMaster", "ApplicationFile", "AppModule", "AppModuleComponent", "AppModuleMetadata", "AppModuleMetadataDependency", "AppModuleMetadataOperationLog", "AttributeMap", "Audit", "AuthorizationServer", "AzureServiceConnection", "BookableResource", "BookableResourceBooking", "BookableResourceBookingExchangeSyncIdMapping", "BookableResourceBookingHeader", "BookableResourceCategory", "BookableResourceCategoryAssn", "BookableResourceCharacteristic", "BookableResourceGroup", "BookingStatus", "BulkDeleteFailure", "BulkDeleteOperation", "BulkOperationLog", "BusinessDataLocalizedLabel", "BusinessProcessFlowInstance", "BusinessUnitMap", "BusinessUnitNewsArticle", "Calendar", "CalendarRule", "CardType", "Category", "ChannelAccessProfile", "ChannelAccessProfileRule", "ChannelAccessProfileRuleItem", "ChannelProperty", "ChannelPropertyGroup", "Characteristic", "ChildIncidentCount", "ClientUpdate", "ColumnMapping", "Commitment", "Competitor", "CompetitorAddress", "ComplexControl", "ConstraintBasedGroup", "Contract", "ContractDetail", "ContractTemplate", "ConvertRule", "ConvertRuleItem", "CustomControl", "CustomControlDefaultConfig", "CustomControlResource", "CustomerOpportunityRole", "CustomerRelationship", "DataPerformance", "DelveActionHub", "Dependency", "DependencyFeature", "DependencyNode", "Discount", "DiscountType", "DisplayString", "DisplayStringMap", "DocumentIndex", "DocumentTemplate", "DuplicateRecord", "DuplicateRule", "DuplicateRuleCondition", "DynamicProperty", "DynamicPropertyAssociation", "DynamicPropertyInstance", "DynamicPropertyOptionSetItem", "EmailHash", "EmailSearch", "EmailServerProfile", "EmailSignature", "Entitlement", "EntitlementChannel", "EntitlementTemplate", "EntitlementTemplateChannel", "EntityDataProvider", "EntityDataSource", "EntityMap", "Equipment", "ExchangeSyncIdMapping", "ExpanderEvent", "ExpiredProcess", "ExternalParty", "ExternalPartyItem", "Feedback", "FieldPermission", "FieldSecurityProfile", "FilterTemplate", "FixedMonthlyFiscalCalendar", "GlobalSearchConfiguration", "GoalRollupQuery", "HierarchyRule", "HierarchySecurityConfiguration", "ImageDescriptor", "Import", "ImportData", "ImportEntityMapping", "ImportFile", "ImportJob", "ImportLog", "ImportMap", "Incident", "IncidentResolution", "IntegrationStatus", "InteractionForEmail", "InternalAddress", "InterProcessLock", "InvalidDependency", "Invoice", "InvoiceDetail", "IsvConfig", "KbArticle", "KbArticleComment", "KbArticleTemplate", "KnowledgeArticle", "KnowledgeArticleIncident", "KnowledgeArticleViews", "KnowledgeBaseRecord", "KnowledgeSearchModel", "LanguageLocale", "LeadToOpportunitySalesProcess", "License", "LocalConfigStore", "LookUpMapping", "MailboxStatistics", "MailboxTrackingCategory", "MailboxTrackingFolder", "MailMergeTemplate", "MetadataDifference", "Metric", "MobileOfflineProfile", "MobileOfflineProfileItem", "MobileOfflineProfileItemAssociation", "MonthlyFiscalCalendar", "msdyn_icebreakersconfig", "msdyn_notesanalysisconfig", "msdyn_odatav4ds", "msdyn_orginsightsuserdashboarddefinition", "msdyn_PostAlbum", "msdyn_PostConfig", "msdyn_PostRuleConfig", "msdyn_relationshipinsightsunifiedconfig", "msdyn_siconfig", "msdyn_solutioncomponentdatasource", "msdyn_solutioncomponentsummary", "msdyn_untrackedappointment", "msdyn_wallsavedquery", "msdyn_wallsavedqueryusersettings", "MultiEntitySearch", "MultiEntitySearchEntities", "MultiSelectAttributeOptionValues", "NavigationSetting", "NewProcess", "Notification", "OfficeDocument", "OfficeGraphDocument", "OfflineCommandDefinition", "OpportunityProduct", "OpportunitySalesProcess", "OrderClose", "Organization", "OrganizationStatistic", "OrganizationUI", "OrgInsightsMetric", "OrgInsightsNotification", "Owner", "OwnerMapping", "PartnerApplication", "PersonalDocumentTemplate", "PhoneToCaseProcess", "PickListMapping", "PluginAssembly", "PluginTraceLog", "PluginType", "PluginTypeStatistic", "Position", "PostFollow", "PostLike", "PostRegarding", "PostRole", "PriceLevel", "PrincipalAttributeAccessMap", "PrincipalObjectAccessReadSnapshot", "PrincipalObjectAttributeAccess", "PrincipalSyncAttributeMap", "Privilege", "PrivilegeObjectTypeCodes", "ProcessStage", "ProcessTrigger", "Product", "ProductAssociation", "ProductPriceLevel", "ProductSubstitute", "Publisher", "PublisherAddress", "QuarterlyFiscalCalendar", "Queue", "QueueItem", "QueueItemCount", "QueueMemberCount", "Quote", "QuoteClose", "QuoteDetail", "RatingModel", "RatingValue", "RecommendedDocument", "RecordCountSnapshot", "RecurrenceRule", "RelationshipRole", "RelationshipRoleMap", "ReplicationBacklog", "ReportCategory", "ReportLink", "ReportVisibility", "Resource", "ResourceGroup", "ResourceGroupExpansion", "ResourceSpec", "RibbonClientMetadata", "RibbonCommand", "RibbonContextGroup", "RibbonCustomization", "RibbonDiff", "RibbonRule", "RibbonTabToCommandMap", "RoleTemplate", "RollupField", "RollupJob", "RollupProperties", "RoutingRule", "RoutingRuleItem", "RuntimeDependency", "SalesLiterature", "SalesLiteratureItem", "SalesOrder", "SalesOrderDetail", "SalesProcessInstance", "SavedOrgInsightsConfiguration", "SavedQuery", "SavedQueryVisualization", "SdkMessage", "SdkMessageFilter", "SdkMessagePair", "SdkMessageProcessingStep", "SdkMessageProcessingStepImage", "SdkMessageProcessingStepSecureConfig", "SdkMessageRequest", "SdkMessageRequestField", "SdkMessageResponse", "SdkMessageResponseField", "SemiAnnualFiscalCalendar", "Service", "ServiceAppointment", "ServiceEndpoint", "SharePointData", "SharePointDocument", "SharePointDocumentLocation", "SharePointSite", "SimilarityRule", "Site", "SiteMap", "SLA", "SLAItem", "SLAKPIInstance", "SocialActivity", "SocialInsightsConfiguration", "SocialProfile", "Solution", "SolutionComponent", "SqlEncryptionAudit", "StatusMap", "Subject", "Subscription", "SubscriptionClients", "SubscriptionManuallyTrackedObject", "SubscriptionStatisticsOffline", "SubscriptionStatisticsOutlook", "SubscriptionSyncEntryOffline", "SubscriptionSyncEntryOutlook", "SubscriptionSyncInfo", "SubscriptionTrackingDeletedObject", "SuggestionCardTemplate", "SyncAttributeMapping", "SyncAttributeMappingProfile", "SyncError", "SystemApplicationMetadata", "SystemForm", "SystemUserManagerMap", "SystemUserPrincipals", "TeamProfiles", "TeamSyncAttributeMappingProfiles", "TeamTemplate", "Template", "Territory", "TextAnalyticsEntityMapping", "Theme", "TimeStampDateMapping", "TimeZoneDefinition", "TimeZoneLocalizedName", "TimeZoneRule", "Topic", "TopicHistory", "TopicModel", "TopicModelConfiguration", "TopicModelExecutionHistory", "TraceAssociation", "TraceLog", "TraceRegarding", "TransactionCurrency", "TransformationMapping", "TransformationParameterMapping", "TranslationProcess", "UnresolvedAddress", "UntrackedEmail", "UoM", "UoMSchedule", "UserApplicationMetadata", "UserEntityInstanceData", "UserEntityUISettings", "UserFiscalCalendar", "UserForm", "UserMapping", "UserQuery", "UserQueryVisualization", "UserSearchFacet", "UserSettings", "WebResource", "WebWizard", "WizardAccessPrivilege", "WizardPage", "WorkflowDependency", "WorkflowLog", "WorkflowWaitSubscription"]
+            return unwantedSchemas.includes(schemaName);
+        }
+
+
+        function GetFetch() {
+
+            for (i = 0; i < EntitySetName.length; i++) {
+
+                //Doesn't pass entity that has null value for Collections Schema Name
+                if (!NullCollectionSchemaName.includes(SchemaName[i])) {
+
+
+                    // The real variables 
+                    var entityPluralName = EntitySetName[i].toString().toLowerCase().trim();
+                    var entityPrimaryKey = PrimaryIdAttribute[i].toString().toLowerCase().trim();
+                    var entityName = SchemaName[i].toString().toLowerCase();
+
+
+                    // Testing Variables
+                    // var entityPluralName = testingEntitySetName[i].toString().toLowerCase().trim();
+                    // var entityPrimaryKey = testingPrimaryIdAttribute[i].toString().toLowerCase().trim();
+                    // var entityName = testingSchemaName[i].toString().toLowerCase().trim();
+
+
+
+                    // console.dir("EntitySetName value: " + EntitySetName[i]);
+                    // console.dir("SchemaName value: " + SchemaName[i]);
+                    // console.dir("PrimaryIdAttribute value: " + PrimaryIdAttribute[i]);
+                    // console.dir("CollectionSchemaName value: " + CollectionSchemaName[i]);
+
+                    // console.dir("entityPluralName value: " + entityPluralName);
+                    // console.dir("entityName value: " + entityName);
+                    // console.dir("entityPrimaryKey value: " + entityPrimaryKey);
+
+
+
+
+                    //Template Fetch Xml Query
+                    var fetchXmlQuery = `  
+                     <fetch version="1.0" output-format="xml-platform" mapping="logical" distinct="false" aggregate='true'>
+                        <entity name= "`+ entityName + `">
+                            <attribute name="`+ entityPrimaryKey + `" aggregate='countcolumn' distinct='true' alias='rowcount' />
+                            <filter>
+                                <condition attribute="`+ entityPrimaryKey + `" operator="not-null" />
+                                
+                            </filter>
+                          
+                        </entity>
+                    </fetch>`;
+
+
+                    fetch(
+                        clientURL +
+                        "/api/data/v9.0/" + entityPluralName + "?fetchXml=" +
+                        encodeURIComponent(fetchXmlQuery),
+                        {
+                            credentials: "same-origin",
+                            headers: {
+                                Prefer: 'odata.include-annotations="*"'
+                            }
+                        }
+                    )
+                        .then(response => response.json())
+
+                        .then(result => {
+                            parseRowCounts(result);
+                        })
+                        .catch(error => alert("Error. Press F12 after closing dialog box to view full details in console. If error is confusing, keep console open and click on FETCH ROW COUNTS OF TABLE again.", error));
+                    //     console.dir("entityPluralName value: " + entityPluralName),
+                    //     console.dir("entityName value: " + entityName),
+                    //     console.dir("entityPrimaryKey value: " + entityPrimaryKey)
+                }
+            }
+
+            alert("Get Fetch Completed")
+        }
+
+        // 
+        function parseRowCounts(result) {
+
+            var tablePluralName = result["@odata.context"].substring(result["@odata.context"].indexOf('#') + 1);
+            var rowCount = result["value"][0].rowcount
+            rowCountArray.push([enterpriseID, tablePluralName, rowCount]);
+
+            //console.dir(rowCountArray);
+
+        }
+
+        //Runs data export
+        function downloadCSV() {
+            exportToCsv(enterpriseID + ".csv", rowCountArray);
+        }
+
+        // Exports data as CSV file
+        function exportToCsv(filename, rows) {
+            var processRow = function (row) {
+                var finalVal = '';
+                for (var j = 0; j < row.length; j++) {
+                    var innerValue = row[j] === null ? '' : row[j].toString();
+                    if (row[j] instanceof Date) {
+                        innerValue = row[j].toLocaleString();
+                    };
+                    var result = innerValue.replace(/"/g, '""');
+                    if (result.search(/("|,|\n)/g) >= 0)
+                        result = '"' + result + '"';
+                    if (j > 0)
+                        finalVal += ',';
+                    finalVal += result;
+                }
+                return finalVal + '\n';
+            };
+
+            var csvFile = '';
+            for (var i = 0; i < rows.length; i++) {
+                csvFile += processRow(rows[i]);
+            }
+
+            var blob = new Blob([csvFile], { type: 'text/csv;charset=utf-8;' });
+            if (navigator.msSaveBlob) { // IE 10+
+                navigator.msSaveBlob(blob, filename);
+            } else {
+                var link = document.createElement("a");
+                if (link.download !== undefined) { // feature detection
+                    // Browsers that support HTML5 download attribute
+                    var url = URL.createObjectURL(blob);
+                    link.setAttribute("href", url);
+                    link.setAttribute("download", filename);
+                    link.style.visibility = 'hidden';
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                }
+            }
+        }
+
+
+    </script>
+</body>
+
+</html>
